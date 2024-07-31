@@ -2,9 +2,9 @@ const express = require('express');
 const dotenv = require('dotenv');
 dotenv.config();
 
-const { OpenAI } = require('openai');
+const OpenAI = require('openai');
+const openai = new OpenAI(process.env.OPENAI_API_KEY);
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const app = express();
 const cors = require('cors');
@@ -16,23 +16,25 @@ app.get('/', (req, res) => { });
 app.post('/prompts', (req, res) => {
     const runPromt = async () => {
 
-        const userPrompt = req.body;
-        console.log(userPrompt);
+        const userPrompt = req.body.prompt;
+        console.log(userPrompt);        
 
         const prompt = `I created a website of blessings,
-          I want you to give me back 3 answers to the following request: ${userPromt}
+          I want you to give me back 3 answers to the following request: ${userPrompt}
           return the response in a parsable JSON format like follows:
          {
          "1":"...",
          "2":"...",
          "3":"..."
          }`;
-        const response = await openai.createCompletion({
+         const response = await openai.chat.completions.create({
             model: "gpt-3.5-turbo",
-            prompt: prompt,
-            max_tokens: 100,
-        });
-        const parseableJSONresponse = response.data.choices[0];
+            messages: [{ role: "user", content: prompt }],
+            max_tokens: 100
+          });
+          
+          const parseableJSONresponse = response.choices[0].message.content;
+          
         let parseResponse;
         try {
             parseResponse = JSON.parse(parseableJSONresponse);
